@@ -19,6 +19,10 @@ class User:
 
     @staticmethod
     def create_user(username, email, password):
+
+        if username is None or email is None or password is None:
+            raise ValueError("Username, email, and parola cannot be None")
+
         cur = connection.cursor()
         cur.execute(
             """

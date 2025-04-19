@@ -23,7 +23,7 @@ class UserResource(Resource):
     def post(self):
         new_user = request.get_json()
         try:
-            User.create_user(new_user['username'], new_user['email'], new_user['password'])
+            User.create_user(new_user.get('username'), new_user.get('email'), new_user.get('parola'))
             return {'message': 'User created successfully'}, 201
         except Exception as e:
             return {'error_message': str(e)}, 400
@@ -44,9 +44,10 @@ class TaskResource(Resource):
             else:
                 return {'error_message': 'Task not found'}, 404
         else:
-            tasks = Task.get_tasks()
+            filter = request.get_json()
+            tasks = Task.get_tasks(titlu=filter.get('titlu'), descriere=filter.get('descriere'), responsabil=filter.get('responsabil'))
             return jsonify(tasks)
-    
+
     def delete(self, task_id):
         try:
             Task.delete_task(task_id)
@@ -57,20 +58,21 @@ class TaskResource(Resource):
     def post(self):
         new_task = request.get_json()
         try:
-            if 'due_date' not in new_task:
-                new_task['due_date'] = None
-            if 'responsabil' not in new_task:
-                new_task['responsabil'] = None
-            if 'parent_id' not in new_task:
-                new_task['parent_id'] = None
-            if 'descriere' not in new_task:
-                new_task['descriere'] = None
-            Task.create_task(titlu=new_task['titlu'], descriere=new_task['descriere'],
-                                 due_date=new_task['due_date'],responsabil=new_task['responsabil'], parent_id=new_task.get('parent_id'))
+            Task.create_task(titlu=new_task.get('titlu'), descriere=new_task.get('descriere'),
+                                 due_date=new_task.get('due_date'),responsabil=new_task.get('responsabil'), parent_id=new_task.get('parent_id'))
             return {'message': 'Task created successfully'}, 201
         except Exception as e:
             return {'error_message': str(e)}, 400
         
+    def patch(self, task_id):
+        updated_task = request.get_json()
+        try:
+            Task.update_task(task_id, titlu=updated_task.get('titlu'), descriere=updated_task.get('descriere'),
+                             due_date=updated_task.get('due_date'), responsabil=updated_task.get('responsabil'),
+                             parent_id=updated_task.get('parent_id'))
+            return {'message': 'Task updated successfully'}, 200
+        except Exception as e:
+            return {'error_message': str(e)}, 400
 class CommentResource(Resource):
     def get(self, comment_id=None):
         if comment_id:
@@ -80,13 +82,14 @@ class CommentResource(Resource):
             else:
                 return {'error_message': 'Comment not found'}, 404
         else:
-            comments = Comment.get_comments()
+            filter = request.get_json()
+            comments = Comment.get_comments(task_id=filter.get('task_id'), user_id=filter.get('user_id'), comment=filter.get('comment'))
             return jsonify(comments)
     
     def post(self):
         new_comment = request.get_json()
         try:
-            Comment.create_comment(new_comment['task_id'], new_comment['user_id'], new_comment['comment'])
+            Comment.create_comment(new_comment.get('task_id'), new_comment.get('user_id'), new_comment.get('comment'))
             return {'message': 'Comment created successfully'}, 201
         except Exception as e:
             return {'error_message': str(e)}, 400
@@ -97,6 +100,7 @@ class CommentResource(Resource):
             return {'message': 'Comment deleted successfully'}, 200
         except Exception as e:
             return {'error_message': str(e)}, 400
+
 
 api.add_resource(UserResource, '/users', '/users/<int:user_id>')
 api.add_resource(TaskResource, '/tasks', '/tasks/<int:task_id>')
