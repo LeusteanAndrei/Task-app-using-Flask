@@ -1,11 +1,13 @@
 from db import connection
 
+# metodele pentru tabelul de task-uri
 
 
 class Task:
+    # cele doua metode pentru a obtine task-uri, acestea pot fi filtrate dupa nume, descriere si responsabil
     @staticmethod
     def get_tasks(titlu=None, descriere=None, responsabil=None):
-        if titlu is None and descriere is None:
+        if titlu is None and descriere is None and responsabil is None:
             cur = connection.cursor()
             cur.execute("SELECT * FROM tasks")
             tasks = cur.fetchall()
@@ -19,11 +21,11 @@ class Task:
             conditions = []
             
             if titlu:
-                conditions.append("LOWER(titlu) LIKE %s")
-                params.append(f"%{titlu.lower()}%")
+                conditions.append("titlu ILIKE %s")
+                params.append(f"%{titlu}%")
             if descriere:
-                conditions.append("LOWER(descriere) LIKE %s")
-                params.append(f"%{descriere.lower()}%")
+                conditions.append("descriere ILIKE %s")
+                params.append(f"%{descriere}%")
             if responsabil:
                 conditions.append("responsabil = %s")
                 params.append(responsabil)
@@ -44,7 +46,6 @@ class Task:
         cur.close()
         return task
     
-
     @staticmethod
     def create_task(titlu, descriere = None, due_date = None, responsabil = None, parent_id = None):
         if titlu is None:
@@ -92,8 +93,6 @@ class Task:
         connection.commit()
         cur.close()
 
-    @staticmethod
-    def get_task_by_title(titlu):
         cur = connection.cursor()
         cur.execute("SELECT * FROM tasks WHERE titlu = %s", (titlu,))
         task = cur.fetchone()

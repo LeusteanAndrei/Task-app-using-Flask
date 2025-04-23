@@ -8,6 +8,10 @@ from datetime import datetime
 app = Flask(__name__)
 api = Api(app)
 
+#in cazul tuturor filtrarilor vom folosi parametrii din body-ul request-ului
+#in cazul in care nu se specifica nimic, se vor returna toate datele din baza de date
+
+
 class UserResource(Resource):
     def get(self, user_id=None):
         if user_id:
@@ -17,13 +21,14 @@ class UserResource(Resource):
             else:
                 return {'error_message': 'User not found'}, 404
         else:
-            users = User.get_users()
+            filter = request.get_json()
+            users = User.get_users(nume=filter.get('nume'), email=filter.get('email'))
             return jsonify(users)
     
     def post(self):
         new_user = request.get_json()
         try:
-            User.create_user(new_user.get('username'), new_user.get('email'), new_user.get('parola'))
+            User.create_user(new_user.get('nume'), new_user.get('email'), new_user.get('parola'))
             return {'message': 'User created successfully'}, 201
         except Exception as e:
             return {'error_message': str(e)}, 400
@@ -73,6 +78,7 @@ class TaskResource(Resource):
             return {'message': 'Task updated successfully'}, 200
         except Exception as e:
             return {'error_message': str(e)}, 400
+
 class CommentResource(Resource):
     def get(self, comment_id=None):
         if comment_id:

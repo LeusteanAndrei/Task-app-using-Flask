@@ -1,10 +1,13 @@
 from db import connection
 
+#  metodele pentru tabelul comments
 
 class Comment:
+
+    #  metode pentru obtinerea comentariilor, la fel si ele pot fi filtrate dupa task_id, user_id si comentariu
     @staticmethod
     def get_comments(task_id=None, user_id=None, comment=None):
-        if task_id is None and user_id is None:
+        if task_id is None and user_id is None and comment is None:
             cur = connection.cursor()
             cur.execute("SELECT * FROM comments")
             comments = cur.fetchall()
@@ -22,10 +25,10 @@ class Comment:
             if user_id:
                 conditions.append("user_id = %s")
                 params.append(user_id)
+
             if comment:
-                conditions.append("LOWER(comment) LIKE %s")
-                params.append(f"%{comment.lower()}%")
-            
+                conditions.append("comment ILIKE %s")
+                params.append(f"%{comment}%")
             if conditions:
                 query += " WHERE " + " AND ".join(conditions)
 
@@ -43,6 +46,8 @@ class Comment:
         cur.close()
         return comment
     
+
+
     @staticmethod
     def create_comment(task_id, user_id, comment):
         if task_id is None or user_id is None or comment is None:
